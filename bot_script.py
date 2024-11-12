@@ -48,40 +48,51 @@ def format_schedule(classes):
 # Set up the GMT+6 timezone
 tz = pytz.timezone("Asia/Dhaka")  # GMT+6 timezone
 
+#function to get todays schedule
 async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Get the current time in GMT+6
     now = datetime.now(tz)
 
     # Format the day and date using the timezone
-    today_day = now.strftime("%a").upper()
+    today_day_full = now.strftime("%A")  # Full name of the day (e.g., "Thursday")
+    today_day_abbr = now.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "THU")
     today_date = now.strftime("%d-%m-%Y")
 
     # Fetch the classes for today
-    classes = get_classes_for_day(today_day)
+    classes = get_classes_for_day(today_day_abbr)
 
     # Format the response
     if not classes:
-        response = f"❌ *No classes scheduled for today ({today_date})* ❌"
+        response = f"❌ *No classes scheduled for today ({today_date}, {today_day_full})* ❌"
     else:
-        response = f" *Today's Schedule ({today_date}):*\n\n"
+        response = f" *Today's Schedule ({today_date}, {today_day_full}):*\n\n"
         response += format_schedule(classes)
 
     # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
 
+
 # Function to get tomorrow's schedule
 async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    tomorrow_day = (datetime.now() + timedelta(days=1)).strftime("%a").upper()
-    tomorrow_date = (datetime.now() + timedelta(days=1)).strftime("%d-%m-%Y")
-    classes = get_classes_for_day(tomorrow_day)
+    # Calculate tomorrow's date and day
+    tomorrow_datetime = datetime.now(tz) + timedelta(days=1)
+    tomorrow_day_full = tomorrow_datetime.strftime("%A")  # Full name of the day (e.g., "Friday")
+    tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "FRI")
+    tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
 
+    # Fetch the classes for tomorrow
+    classes = get_classes_for_day(tomorrow_day_abbr)
+
+    # Format the response
     if not classes:
-        response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date})* ❌"
+        response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date}, {tomorrow_day_full})* ❌"
     else:
-        response = f" *Tomorrow's Schedule ({tomorrow_date}):*\n\n"
+        response = f" *Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
         response += format_schedule(classes)
 
+    # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
+
 
 # Other daily schedule functions follow the same pattern as `todays_schedule` and `tomorrows_schedule`.
 # Function to get Saturday's schedule
