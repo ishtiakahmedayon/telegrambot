@@ -341,7 +341,7 @@ def main():
     # Set up the scheduler (APScheduler) to send the message every day at 8 AM
     scheduler = AsyncIOScheduler()
     group_chat_id = '-1002295712106'  # Replace with your group chat ID
-    scheduler.add_job(lambda: send_scheduled_message(application, group_chat_id), 'cron', hour=2, minute=59)
+    scheduler.add_job(lambda: send_scheduled_message(application, group_chat_id), 'cron', hour=13, minute=20)
 
     # Log scheduler start
     logger.info("Starting scheduler...")
