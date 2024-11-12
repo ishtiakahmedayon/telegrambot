@@ -318,11 +318,38 @@ async def delete_schedule_class(update: Update, context: ContextTypes.DEFAULT_TY
 #     except Exception as e:
 #         logger.error("Error in /time command: %s", e)
 
+#function to get current time
 async def current_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     tz = pytz.timezone("Asia/Dhaka")
     now = datetime.now(tz)
     time_str = now.strftime("%I:%M %p, %A, %d-%m-%Y")
     await update.message.reply_text(f"🕰️ *Current Time:* {time_str}", parse_mode="Markdown")
+    
+    
+# Command to delete all messages sent by the bot
+async def clear_bot_messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Deletes all messages sent by the bot in the chat."""
+    
+    bot = context.bot
+    chat_id = update.effective_chat.id
+    bot_id = (await bot.get_me()).id  # Get the bot's ID to identify its messages
+
+    # Inform the user that deletion is in progress
+    confirmation_msg = await update.message.reply_text("🧹 Clearing all bot messages...")
+
+    # Retrieve all messages in the chat history and delete bot's messages
+    async for message in bot.get_chat_history(chat_id):
+        if message.from_user and message.from_user.id == bot_id:
+            try:
+                await bot.delete_message(chat_id, message.message_id)
+            except Exception as e:
+                print(f"Could not delete message {message.message_id}: {e}")
+    
+    # Finally, delete the confirmation message
+    try:
+        await confirmation_msg.delete()
+    except Exception as e:
+        print(f"Could not delete confirmation message: {e}")
 
 
 
@@ -342,6 +369,9 @@ def main():
     application.add_handler(CommandHandler("wed", wednesdays_schedule))
     application.add_handler(CommandHandler("thu", thursdays_schedule))
     application.add_handler(CommandHandler("custom", custom_message))
+    
+    # Register the clear command
+    application.add_handler(CommandHandler("clear", clear_bot_messages))
     
     # Add this command handler in the main function
     application.add_handler(CommandHandler("time", current_time))
