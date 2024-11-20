@@ -430,12 +430,11 @@ def main():
     application.add_handler(CommandHandler("custom", custom_message))
     
     # Handler for adding a class
-    add_class_handler = CommandHandler("add_class", add_class)
+    application.add_handler(CommandHandler("add_class", add_class))
 
     # Handler for deleting a class
-    delete_class_handler = CommandHandler("del_class", delete_class)
-    delete_all_classes_handler = CommandHandler("del_all", delete_all_classes)
-    
+    application.add_handler(CommandHandler("del_class", delete_class))
+    application.add_handler(CommandHandler("del_all", delete_all_classes))
     # Register the clear command
     application.add_handler(CommandHandler("clear", clear_bot_messages))
     
