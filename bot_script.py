@@ -208,10 +208,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                "/mon - Get Monday's class schedule\n" \
                "/tue - Get Tuesday's class schedule\n" \
                "/wed - Get Wednesday's class schedule\n" \
-               "/thu - Get Thursday's class schedule\n" \
-               "/time - Get current time\n" \
-               "/add_class\n" \
-               "/delete_class\n" 
+               "/thu - Get Thursday's class schedule\n"
     
     await update.message.reply_text(response, parse_mode="Markdown")
     
@@ -245,6 +242,46 @@ async def custom_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text("⚠️ Please provide a message after the command.")
 
 
+# Start adding a new schedule (conversation handler)
+async def add_schedule_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("Please enter the day for the new class (e.g., MON, TUE):")
+    return DAY
+
+# Collect day, then ask for class name
+async def add_schedule_day(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data["day"] = update.message.text.strip().upper()
+    await update.message.reply_text("Enter the class name:")
+    return CLASS_NAME
+
+# Collect class name, then ask for start time
+async def add_schedule_class_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data["class_name"] = update.message.text.strip()
+    await update.message.reply_text("Enter the start time (e.g., 10:00):")
+    return START_TIME
+
+# Collect start time, then ask for end time
+async def add_schedule_start_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data["start_time"] = update.message.text.strip()
+    await update.message.reply_text("Enter the end time (e.g., 11:00):")
+    return END_TIME
+
+# Collect end time and save the new class to the database
+async def add_schedule_end_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data["end_time"] = update.message.text.strip()
+    try:
+        conn = sqlite3.connect("schedule.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO Classes (day, class_name, start_time, end_time) VALUES (?, ?, ?, ?)", 
+                       (context.user_data["day"], context.user_data["class_name"], context.user_data["start_time"], context.user_data["end_time"]))
+        conn.commit()
+        conn.close()
+        await update.message.reply_text("✅ Class added successfully!")
+    except sqlite3.Error as e:
+        logger.error("Database error: %s", e)
+        await update.message.reply_text("❌ Error adding class. Please try again.")
+    return ConversationHandler.END
+
+#add class---------------------------------------------
 async def add_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Add a new class to the schedule by providing all details in one command.
@@ -252,27 +289,41 @@ async def add_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     Example: /add_class MON Physics 10:00 11:00
     """
     try:
-        # Check if sufficient arguments are provided
+        # Ensure there are enough arguments
         if len(context.args) < 4:
             await update.message.reply_text(
-                "❌ Please provide all details in the format: `/add_class DAY CLASS_NAME START_TIME END_TIME`\n"
-                "Example: `/add_class MON Physics 10:00 11:00`",
+                "❌ Please provide all details in the format:\n`/add_class DAY CLASS_NAME START_TIME END_TIME`\n"
+                "Example:\n`/add_class MON Physics 10:00 11:00`",
                 parse_mode="Markdown",
             )
             return
 
-        # Parse the command arguments
+        # Extract and clean inputs
         day = context.args[0].strip().upper()
         class_name = context.args[1].strip()
         start_time = context.args[2].strip()
         end_time = context.args[3].strip()
 
-        # Validate inputs (optional, can add further validation as needed)
-        if day not in ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]:
-            await update.message.reply_text("❌ Invalid day. Use MON, TUE, etc.")
+        # Validate the day
+        valid_days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+        if day not in valid_days:
+            await update.message.reply_text(
+                f"❌ Invalid day: `{day}`. Use one of: {', '.join(valid_days)}.",
+                parse_mode="Markdown",
+            )
             return
 
-        # Add to the database
+        # Validate time format (optional, you can remove if unnecessary)
+        import re
+        time_format = r"^\d{2}:\d{2}$"
+        if not re.match(time_format, start_time) or not re.match(time_format, end_time):
+            await update.message.reply_text(
+                "❌ Invalid time format. Use HH:MM (e.g., 10:00).",
+                parse_mode="Markdown",
+            )
+            return
+
+        # Save to the database
         conn = sqlite3.connect("schedule.db")
         cursor = conn.cursor()
         cursor.execute(
@@ -282,17 +333,48 @@ async def add_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         conn.commit()
         conn.close()
 
-        # Confirm success
-        await update.message.reply_text(f"✅ Class `{class_name}` added successfully for `{day}` from `{start_time}` to `{end_time}`!", parse_mode="Markdown")
+        # Send success message
+        await update.message.reply_text(
+            f"✅ Class `{class_name}` added successfully for `{day}` from `{start_time}` to `{end_time}`!",
+            parse_mode="Markdown",
+        )
 
+    except sqlite3.Error as db_error:
+        logger.error("Database error: %s", db_error)
+        await update.message.reply_text("❌ Error saving the class. Please try again.")
+    except Exception as general_error:
+        logger.error("Unexpected error: %s", general_error)
+        await update.message.reply_text("❌ An unexpected error occurred. Please check your input and try again.")
+
+# ---------------------------------------------------------------------------------------------
+
+# Start deleting a schedule (conversation handler)
+async def delete_schedule_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("Enter the day of the class you want to delete:")
+    return DELETE_DAY
+
+# Collect day, then ask for class name to delete
+async def delete_schedule_day(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data["day"] = update.message.text.strip().upper()
+    await update.message.reply_text("Enter the class name to delete:")
+    return DELETE_CLASS
+
+# Delete the specified class from the database
+async def delete_schedule_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    class_name = update.message.text.strip()
+    try:
+        conn = sqlite3.connect("schedule.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM Classes WHERE day = ? AND class_name = ?", (context.user_data["day"], class_name))
+        conn.commit()
+        conn.close()
+        await update.message.reply_text("✅ Class deleted successfully!")
     except sqlite3.Error as e:
         logger.error("Database error: %s", e)
-        await update.message.reply_text("❌ Error adding class. Please try again.")
-    except Exception as e:
-        logger.error("Unexpected error: %s", e)
-        await update.message.reply_text("❌ An unexpected error occurred. Please try again.")
+        await update.message.reply_text("❌ Error deleting class. Please try again.")
+    return ConversationHandler.END
 
-
+#delete class -- 
 async def delete_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Delete a class from the schedule by providing the day and class name.
@@ -339,7 +421,7 @@ async def delete_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("❌ An unexpected error occurred. Please try again.")
 
 
-#function to delete all classes        
+#delete all class ----------------------
 async def delete_all_classes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if len(context.args) != 1:
         await update.message.reply_text("❌ Please provide a single day (e.g., /delete_all_classes MON).")
@@ -363,7 +445,6 @@ async def delete_all_classes(update: Update, context: ContextTypes.DEFAULT_TYPE)
     except sqlite3.Error as e:
         logger.error("Database error: %s", e)
         await update.message.reply_text("❌ Error deleting classes. Please try again.")
-
 
 
 
@@ -429,12 +510,6 @@ def main():
     application.add_handler(CommandHandler("thu", thursdays_schedule))
     application.add_handler(CommandHandler("custom", custom_message))
     
-    # Handler for adding a class
-    application.add_handler(CommandHandler("add_class", add_class))
-
-    # Handler for deleting a class
-    application.add_handler(CommandHandler("del_class", delete_class))
-    application.add_handler(CommandHandler("del_all", delete_all_classes))
     # Register the clear command
     application.add_handler(CommandHandler("clear", clear_bot_messages))
     
@@ -454,7 +529,40 @@ def main():
     # Start the scheduler
     scheduler.start()
 
+    # Conversation handler for adding schedules
+    add_schedule_handler = ConversationHandler(
+        entry_points=[CommandHandler("add_schedule", add_schedule_start)],
+        states={
+            DAY: [MessageHandler(filters.TEXT, add_schedule_day)],
+            CLASS_NAME: [MessageHandler(filters.TEXT, add_schedule_class_name)],
+            START_TIME: [MessageHandler(filters.TEXT, add_schedule_start_time)],
+            END_TIME: [MessageHandler(filters.TEXT, add_schedule_end_time)],
+        },
+        fallbacks=[]
+    )
 
+    # Conversation handler for deleting schedules
+    delete_schedule_handler = ConversationHandler(
+        entry_points=[CommandHandler("delete_schedule", delete_schedule_start)],
+        states={
+            DELETE_DAY: [MessageHandler(filters.TEXT, delete_schedule_day)],
+            DELETE_CLASS: [MessageHandler(filters.TEXT, delete_schedule_class)],
+        },
+        fallbacks=[]
+    )
+
+    application.add_handler(add_schedule_handler)
+    application.add_handler(delete_schedule_handler)
+    
+    #add and del all
+    
+    application.add_handler(CommandHandler("add_class", add_class))
+    application.add_handler(CommandHandler("del_class", delete_class))
+    application.add_handler(CommandHandler("del_all", delete_all_classes))
+    
+    
+    
+    
 
     # Start the bot
     logger.info("Starting bot...")
