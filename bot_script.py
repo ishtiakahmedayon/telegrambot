@@ -243,8 +243,12 @@ async def custom_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 # Start adding a new schedule (conversation handler)
+# Start adding a new schedule (conversation handler)
 async def add_schedule_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text("Please enter the day for the new class (e.g., MON, TUE):")
+    await update.message.reply_text(
+        "Please enter the day for the new class (e.g., MON, TUE):\n\n"
+        "Type /cancel to stop adding the schedule at any time."
+    )
     return DAY
 
 # Collect day, then ask for class name
@@ -347,16 +351,24 @@ async def add_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("❌ An unexpected error occurred. Please check your input and try again.")
 
 # ---------------------------------------------------------------------------------------------
+# Command to delete a class
+
+# Define states for the conversation
+DELETE_DAY, DELETE_CLASS = range(2)
 
 # Start deleting a schedule (conversation handler)
 async def delete_schedule_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text("Enter the day of the class you want to delete:")
+    await update.message.reply_text(
+        "Enter the day of the class you want to delete (or type /cancel to stop):"
+    )
     return DELETE_DAY
 
 # Collect day, then ask for class name to delete
 async def delete_schedule_day(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["day"] = update.message.text.strip().upper()
-    await update.message.reply_text("Enter the class name to delete:")
+    await update.message.reply_text(
+        "Enter the class name to delete (or type /cancel to stop):"
+    )
     return DELETE_CLASS
 
 # Delete the specified class from the database
@@ -365,14 +377,29 @@ async def delete_schedule_class(update: Update, context: ContextTypes.DEFAULT_TY
     try:
         conn = sqlite3.connect("schedule.db")
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM Classes WHERE day = ? AND class_name = ?", (context.user_data["day"], class_name))
+        cursor.execute(
+            "DELETE FROM Classes WHERE day = ? AND class_name = ?", 
+            (context.user_data["day"], class_name)
+        )
         conn.commit()
         conn.close()
-        await update.message.reply_text("✅ Class deleted successfully!")
+        
+        if cursor.rowcount > 0:
+            await update.message.reply_text("✅ Class deleted successfully!")
+        else:
+            await update.message.reply_text("❌ No matching class found to delete.")
     except sqlite3.Error as e:
         logger.error("Database error: %s", e)
         await update.message.reply_text("❌ Error deleting class. Please try again.")
     return ConversationHandler.END
+
+# Cancel the delete process
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("❌Process canceled.")
+    return ConversationHandler.END
+
+
+
 
 #delete class -- 
 async def delete_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -533,22 +560,35 @@ def main():
     add_schedule_handler = ConversationHandler(
         entry_points=[CommandHandler("add_schedule", add_schedule_start)],
         states={
-            DAY: [MessageHandler(filters.TEXT, add_schedule_day)],
-            CLASS_NAME: [MessageHandler(filters.TEXT, add_schedule_class_name)],
-            START_TIME: [MessageHandler(filters.TEXT, add_schedule_start_time)],
-            END_TIME: [MessageHandler(filters.TEXT, add_schedule_end_time)],
+            DAY: [
+                CommandHandler("cancel", cancel),  # Allow cancellation at this stage
+                MessageHandler(filters.TEXT & ~filters.COMMAND, add_schedule_day),
+            ],
+            CLASS_NAME: [
+                CommandHandler("cancel", cancel),  # Allow cancellation at this stage
+                MessageHandler(filters.TEXT & ~filters.COMMAND, add_schedule_class_name),
+            ],
+            START_TIME: [
+                CommandHandler("cancel", cancel),  # Allow cancellation at this stage
+                MessageHandler(filters.TEXT & ~filters.COMMAND, add_schedule_start_time),
+            ],
+            END_TIME: [
+                CommandHandler("cancel", cancel),  # Allow cancellation at this stage
+                MessageHandler(filters.TEXT & ~filters.COMMAND, add_schedule_end_time),
+            ],
         },
-        fallbacks=[]
+        fallbacks=[CommandHandler("cancel", cancel)],  # Universal cancel fallback
     )
+
 
     # Conversation handler for deleting schedules
     delete_schedule_handler = ConversationHandler(
         entry_points=[CommandHandler("delete_schedule", delete_schedule_start)],
         states={
-            DELETE_DAY: [MessageHandler(filters.TEXT, delete_schedule_day)],
-            DELETE_CLASS: [MessageHandler(filters.TEXT, delete_schedule_class)],
+            DELETE_DAY: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT & ~filters.COMMAND, delete_schedule_day)],
+            DELETE_CLASS: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT & ~filters.COMMAND, delete_schedule_class)],
         },
-        fallbacks=[]
+        fallbacks=[CommandHandler("cancel", cancel)],
     )
 
     application.add_handler(add_schedule_handler)
