@@ -9,8 +9,7 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-logger.info(f"Fetching schedule for {monday_day} ({monday_date})")
-logger.info(f"Classes fetched: {classes}")
+
 
 # Set up the GMT+6 timezone
 tz = pytz.timezone("Asia/Dhaka")  # GMT+6 timezone
@@ -151,14 +150,16 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Fetch the classes for tomorrow
     classes = get_classes_for_day_sorted(tomorrow_day_abbr)
-
+    
     # Format the response
     if not classes:
         response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date}, {tomorrow_day_full})* ❌"
     else:
         response = f" *Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
         response += format_schedule(classes)
-
+        
+    # Log the final response
+    logger.info(f"Response sent to user:\n{response}")
     # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
 
@@ -183,13 +184,14 @@ async def sundays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     sunday_day = "SUN"
     sunday_date = (datetime.now() + timedelta((6 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
     classes = get_classes_for_day_sorted(sunday_day)
-
+    logger.info(f"Fetching schedule for {monday_day} ({monday_date})")
     if not classes:
         response = f"❌ *No classes scheduled for Sunday ({sunday_date})* ❌"
     else:
         response = f" *Sunday's Schedule ({sunday_date})*: \n\n"
         response += format_schedule(classes)
-
+    
+    
     await update.message.reply_text(response, parse_mode="Markdown")
 
 # Function to get Monday's schedule
