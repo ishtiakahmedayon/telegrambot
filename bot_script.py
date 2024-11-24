@@ -21,6 +21,34 @@ course_emojis = {
     "ICT 1105 PHYSICS": "⚛️"
 }
 
+#---
+# Assuming you have a 'Classes' table with columns: day, class_name, start_time, end_time
+def get_classes_for_day_sorted(day: str):
+    conn = sqlite3.connect("schedule.db")
+    cursor = conn.cursor()
+
+    # Convert start_time to a 24-hour format and order the results
+    cursor.execute("""
+        SELECT class_name, start_time, end_time 
+        FROM Classes 
+        WHERE day = ? 
+        ORDER BY strftime('%H:%M', start_time)
+    """, (day,))
+
+    classes = cursor.fetchall()
+    conn.close()
+
+    return classes
+
+def convert_to_12_hour_format(time_str: str) -> str:
+    # Convert the time to 12-hour format with AM/PM
+    time_obj = datetime.strptime(time_str, "%H:%M")
+    return time_obj.strftime("%I:%M %p")
+
+# Example usage
+start_time_12hr = convert_to_12_hour_format("14:30")  # Output: "02:30 PM"
+end_time_12hr = convert_to_12_hour_format("16:30")    # Output: "04:30 PM"
+
 # States for the conversation handler
 DAY, CLASS_NAME, START_TIME, END_TIME, DELETE_DAY, DELETE_CLASS = range(6)
 
@@ -41,8 +69,11 @@ def get_classes_for_day(day: str):
 def format_schedule(classes):
     response = ""
     for class_name, start_time, end_time in classes:
+        start_time_12hr = convert_to_12_hour_format(start_time)
+        end_time_12hr = convert_to_12_hour_format(end_time)
         emoji = course_emojis.get(class_name, "")  # Get the emoji for the class
-        response += f"▶️ {start_time} - {end_time}: {emoji} *{class_name}*\n"
+        #response += f"▶️ {start_time} - {end_time}: {emoji} *{class_name}*\n"
+        response += f"⏰ *{start_time_12hr} - {end_time_12hr}*:📚 {class_name}\n"
     return response
 
 # Set up the GMT+6 timezone
@@ -73,32 +104,7 @@ tz = pytz.timezone("Asia/Dhaka")  # GMT+6 timezone
 
 #new function today class
 
-# Assuming you have a 'Classes' table with columns: day, class_name, start_time, end_time
-def get_classes_for_day_sorted(day: str):
-    conn = sqlite3.connect("schedule.db")
-    cursor = conn.cursor()
 
-    # Convert start_time to a 24-hour format and order the results
-    cursor.execute("""
-        SELECT class_name, start_time, end_time 
-        FROM Classes 
-        WHERE day = ? 
-        ORDER BY strftime('%H:%M', start_time)
-    """, (day,))
-
-    classes = cursor.fetchall()
-    conn.close()
-
-    return classes
-
-def convert_to_12_hour_format(time_str: str) -> str:
-    # Convert the time to 12-hour format with AM/PM
-    time_obj = datetime.strptime(time_str, "%H:%M")
-    return time_obj.strftime("%I:%M %p")
-
-# Example usage
-start_time_12hr = convert_to_12_hour_format("14:30")  # Output: "02:30 PM"
-end_time_12hr = convert_to_12_hour_format("16:30")    # Output: "04:30 PM"
 
 
 async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
