@@ -122,7 +122,8 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         for class_name, start_time, end_time in classes:
             start_time_12hr = convert_to_12_hour_format(start_time)
             end_time_12hr = convert_to_12_hour_format(end_time)
-            response += f"📚 *{class_name}*: {start_time_12hr} - {end_time_12hr}\n"
+            # response += f"📚 *{class_name}*: {start_time_12hr} - {end_time_12hr}\n"
+            response += f"⏰ *{start_time_12hr} - {end_time_12hr}*: {class_name}\n"
 
     # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
