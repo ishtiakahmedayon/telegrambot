@@ -9,6 +9,11 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
+logger.info(f"Fetching schedule for {monday_day} ({monday_date})")
+logger.info(f"Classes fetched: {classes}")
+
+# Set up the GMT+6 timezone
+tz = pytz.timezone("Asia/Dhaka")  # GMT+6 timezone
 
 # Emoji mapping for courses
 course_emojis = {
@@ -76,8 +81,7 @@ def format_schedule(classes):
         response += f"⏰ *{start_time_12hr} - {end_time_12hr}*:📚 {class_name}\n"
     return response
 
-# Set up the GMT+6 timezone
-tz = pytz.timezone("Asia/Dhaka")  # GMT+6 timezone
+
 
 # #function to get todays schedule
 # async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -144,6 +148,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "FRI")
     tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
 
+
     # Fetch the classes for tomorrow
     classes = get_classes_for_day_sorted(tomorrow_day_abbr)
 
@@ -188,9 +193,22 @@ async def sundays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     await update.message.reply_text(response, parse_mode="Markdown")
 
 # Function to get Monday's schedule
+# async def mondays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+#     monday_day = "MON"
+#     monday_date = (datetime.now() + timedelta((0 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
+#     classes = get_classes_for_day_sorted(monday_day)
+
+#     if not classes:
+#         response = f"❌ *No classes scheduled for Monday ({monday_date})* ❌"
+#     else:
+#         response = f" *Monday's Schedule ({monday_date})*: \n\n"
+#         response += format_schedule(classes)
+
+#     await update.message.reply_text(response, parse_mode="Markdown")
+
 async def mondays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     monday_day = "MON"
-    monday_date = (datetime.now() + timedelta((0 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
+    monday_date = (datetime.now(tz) + timedelta(days=(7 - datetime.now(tz).weekday()))).strftime("%d-%m-%Y")
     classes = get_classes_for_day_sorted(monday_day)
 
     if not classes:
@@ -200,6 +218,7 @@ async def mondays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         response += format_schedule(classes)
 
     await update.message.reply_text(response, parse_mode="Markdown")
+
 
 # Function to get Tuesday's schedule
 async def tuesdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
