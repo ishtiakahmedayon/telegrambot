@@ -27,10 +27,19 @@ course_emojis = {
 
 
 
+# def convert_to_12_hour_format(time_str: str) -> str:
+#     # Convert the time to 12-hour format with AM/PM
+#     time_obj = datetime.strptime(time_str, "%H:%M")
+#     return time_obj.strftime("%I:%M %p")
 def convert_to_12_hour_format(time_str: str) -> str:
-    # Convert the time to 12-hour format with AM/PM
-    time_obj = datetime.strptime(time_str, "%H:%M")
-    return time_obj.strftime("%I:%M %p")
+    try:
+        # Convert the time to 12-hour format with AM/PM
+        time_obj = datetime.strptime(time_str, "%H:%M")
+        return time_obj.strftime("%I:%M %p")
+    except ValueError:
+        logger.error(f"Invalid time format: {time_str}")
+        return "Invalid time"
+
 
 # Example usage
 start_time_12hr = convert_to_12_hour_format("14:30")  # Output: "02:30 PM"
@@ -78,12 +87,15 @@ DAY, CLASS_NAME, START_TIME, END_TIME, DELETE_DAY, DELETE_CLASS = range(6)
 def format_schedule(classes):
     response = ""
     for class_name, start_time, end_time in classes:
-        start_time_12hr = convert_to_12_hour_format(start_time)
-        end_time_12hr = convert_to_12_hour_format(end_time)
-        emoji = course_emojis.get(class_name, "")  # Get the emoji for the class
-        #response += f"▶️ {start_time} - {end_time}: {emoji} *{class_name}*\n"
-        response += f"⏰ *{start_time_12hr} - {end_time_12hr}*:📚 {class_name}\n"
+        try:
+            start_time_12hr = convert_to_12_hour_format(start_time)
+            end_time_12hr = convert_to_12_hour_format(end_time)
+            emoji = course_emojis.get(class_name, "")
+            response += f"⏰ *{start_time_12hr} - {end_time_12hr}*:📚 {class_name}\n"
+        except Exception as e:
+            logger.error(f"Error formatting schedule for {class_name}: {e}")
     return response
+
 
 
 
