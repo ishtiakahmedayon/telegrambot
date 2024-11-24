@@ -25,24 +25,7 @@ course_emojis = {
     "ICT 1105 PHYSICS": "⚛️"
 }
 
-#---
-# Assuming you have a 'Classes' table with columns: day, class_name, start_time, end_time
-def get_classes_for_day_sorted(day: str):
-    conn = sqlite3.connect("schedule.db")
-    cursor = conn.cursor()
 
-    # Convert start_time to a 24-hour format and order the results
-    cursor.execute("""
-        SELECT class_name, start_time, end_time 
-        FROM Classes 
-        WHERE day = ? 
-        ORDER BY strftime('%H:%M', start_time)
-    """, (day,))
-
-    classes = cursor.fetchall()
-    conn.close()
-
-    return classes
 
 def convert_to_12_hour_format(time_str: str) -> str:
     # Convert the time to 12-hour format with AM/PM
@@ -53,21 +36,43 @@ def convert_to_12_hour_format(time_str: str) -> str:
 start_time_12hr = convert_to_12_hour_format("14:30")  # Output: "02:30 PM"
 end_time_12hr = convert_to_12_hour_format("16:30")    # Output: "04:30 PM"
 
-# States for the conversation handler
-DAY, CLASS_NAME, START_TIME, END_TIME, DELETE_DAY, DELETE_CLASS = range(6)
+#---
 
-# Connect to the SQLite database to fetch the schedule data
-def get_classes_for_day(day: str):
+def get_classes_for_day(day: str, sorted: bool = True):
     try:
         conn = sqlite3.connect("schedule.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT class_name, start_time, end_time FROM Classes WHERE day = ?", (day,))
+        query = """
+            SELECT class_name, start_time, end_time 
+            FROM Classes 
+            WHERE day = ?
+        """
+        if sorted:
+            query += " ORDER BY strftime('%H:%M', start_time)"
+        cursor.execute(query, (day,))
         classes = cursor.fetchall()
-        conn.close()
-        return classes
     except sqlite3.Error as e:
         logger.error("Database error: %s", e)
         return []
+    finally:
+        conn.close()
+    return classes
+
+# States for the conversation handler
+DAY, CLASS_NAME, START_TIME, END_TIME, DELETE_DAY, DELETE_CLASS = range(6)
+
+# # Connect to the SQLite database to fetch the schedule data
+# def get_classes_for_day(day: str):
+#     try:
+#         conn = sqlite3.connect("schedule.db")
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT class_name, start_time, end_time FROM Classes WHERE day = ?", (day,))
+#         classes = cursor.fetchall()
+#         conn.close()
+#         return classes
+#     except sqlite3.Error as e:
+#         logger.error("Database error: %s", e)
+#         return []
 
 # Function to format the schedule with emojis
 def format_schedule(classes):
