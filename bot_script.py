@@ -199,7 +199,7 @@ async def sundays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     
     await update.message.reply_text(response, parse_mode="Markdown")
 
-Function to get Monday's schedule
+# Function to get Monday's schedule
 async def mondays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     monday_day = "MON"
     monday_date = (datetime.now() + timedelta((0 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
