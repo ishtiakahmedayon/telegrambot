@@ -125,7 +125,7 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     today_date = now.strftime("%d-%m-%Y")
 
     # Fetch the classes for today, sorted by time
-    classes = get_classes_for_day_sorted(today_day_abbr)
+    classes = get_classes_for_day(today_day_abbr)
 
     # Format the response
     if not classes:
@@ -154,7 +154,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
     # Fetch the classes for tomorrow
-    classes = get_classes_for_day_sorted(tomorrow_day_abbr)
+    classes = get_classes_for_day(tomorrow_day_abbr)
     
     # Format the response
     if not classes:
@@ -174,7 +174,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def saturdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     saturday_day = "SAT"
     saturday_date = (datetime.now() + timedelta((5 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
-    classes = get_classes_for_day_sorted(saturday_day)
+    classes = get_classes_for_day(saturday_day)
 
     if not classes:
         response = f"❌ *No classes scheduled for Saturday ({saturday_date})* ❌"
@@ -188,8 +188,8 @@ async def saturdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def sundays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     sunday_day = "SUN"
     sunday_date = (datetime.now() + timedelta((6 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
-    classes = get_classes_for_day_sorted(sunday_day)
-    logger.info(f"Fetching schedule for {monday_day} ({monday_date})")
+    classes = get_classes_for_day(sunday_day)
+    
     if not classes:
         response = f"❌ *No classes scheduled for Sunday ({sunday_date})* ❌"
     else:
@@ -216,7 +216,7 @@ async def sundays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 async def mondays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     monday_day = "MON"
     monday_date = (datetime.now(tz) + timedelta(days=(7 - datetime.now(tz).weekday()))).strftime("%d-%m-%Y")
-    classes = get_classes_for_day_sorted(monday_day)
+    classes = get_classes_for_day(monday_day)
 
     if not classes:
         response = f"❌ *No classes scheduled for Monday ({monday_date})* ❌"
@@ -231,7 +231,7 @@ async def mondays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 async def tuesdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     tuesday_day = "TUE"
     tuesday_date = (datetime.now() + timedelta((1 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
-    classes = get_classes_for_day_sorted(tuesday_day)
+    classes = get_classes_for_day(tuesday_day)
 
     if not classes:
         response = f"❌ *No classes scheduled for Tuesday ({tuesday_date})* ❌"
@@ -245,7 +245,7 @@ async def tuesdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def wednesdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     wednesday_day = "WED"
     wednesday_date = (datetime.now() + timedelta((2 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
-    classes = get_classes_for_day_sorted(wednesday_day)
+    classes = get_classes_for_day(wednesday_day)
 
     if not classes:
         response = f"❌ *No classes scheduled for Wednesday ({wednesday_date})* ❌"
@@ -259,7 +259,7 @@ async def wednesdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def thursdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     thursday_day = "THU"
     thursday_date = (datetime.now() + timedelta((3 - datetime.now().weekday()) % 7)).strftime("%d-%m-%Y")
-    classes = get_classes_for_day_sorted(thursday_day)
+    classes = get_classes_for_day(thursday_day)
 
     if not classes:
         response = f"❌ *No classes scheduled for Thursday ({thursday_date})* ❌"
