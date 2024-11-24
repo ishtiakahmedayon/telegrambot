@@ -144,12 +144,7 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         response = f"❌ *No classes scheduled for today ({today_date}, {today_day_full})* ❌"
     else:
         response = f" *Today's Schedule ({today_date}, {today_day_full}):*\n\n"
-        # Format the schedule with 12-hour time format
-        for class_name, start_time, end_time in classes:
-            start_time_12hr = convert_to_12_hour_format(start_time)
-            end_time_12hr = convert_to_12_hour_format(end_time)
-            # response += f"📚 *{class_name}*: {start_time_12hr} - {end_time_12hr}\n"
-            response += f"⏰ *{start_time_12hr} - {end_time_12hr}*:📚 {class_name}\n"
+        response += format_schedule(classes)
 
     # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
