@@ -114,15 +114,10 @@ def is_vacation() -> tuple[bool, str]:
     # Debugging: Print the fetched data
     print(f"Vacation status: {toggle_mode}, Start Date: {start_date}, End Date: {end_date}")
 
-    # If vacation is toggled on, return only the toggle status
+    # If vacation is toggled on, check if dates are available
     if toggle_mode == 1:
-        # If vacation mode is toggled, check if dates are available
         if start_date and end_date:
             now = datetime.now(tz)  # Get current time in GMT+6
-            today = now.strftime("%d-%m-%Y")
-
-            # Debugging: Print current date and the start and end dates
-            print(f"Now: {now}, Today: {today}, Start Date: {start_date}, End Date: {end_date}")
 
             # Convert start_date and end_date to datetime objects with timezone
             start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
@@ -131,17 +126,21 @@ def is_vacation() -> tuple[bool, str]:
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
             end_date_obj = tz.localize(end_date_obj)  # Make it timezone-aware
 
-            print(f"Start Date Object: {start_date_obj}, End Date Object: {end_date_obj}")
-
-            # If today's date is within the vacation period
+            # Check if today's date is within the vacation period
             if start_date_obj <= now <= end_date_obj:
                 # Calculate the remaining days
                 delta = end_date_obj - now
                 days_remaining = delta.days
 
-                # If days remaining is negative, vacation is over
+                # If days remaining is negative, vacation is over, toggle off vacation mode
                 if days_remaining < 0:
-                    return True, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
+                    # Update the database to toggle off vacation mode
+                    conn = sqlite3.connect("schedule.db")
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE Vacation SET toggle_mode = 0 WHERE toggle_mode = 1")
+                    conn.commit()
+                    conn.close()
+                    return False, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
                 
                 return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
             else:
