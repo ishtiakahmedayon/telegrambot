@@ -99,6 +99,7 @@ def format_schedule(classes):
 
 #vacation functions-----------------------------------------------------------------------------------------------------------------------------------
 
+
 def is_vacation() -> tuple[bool, str]:
     conn = sqlite3.connect("schedule.db")
     cursor = conn.cursor()
@@ -108,22 +109,24 @@ def is_vacation() -> tuple[bool, str]:
     vacation_data = cursor.fetchone()
     conn.close()
 
-    toggle_mode, start_date, end_date = vacation_data
+    if vacation_data:
+        toggle_mode, start_date, end_date = vacation_data
 
-    # If vacation is toggled on, return only the toggle status
-    if toggle_mode == 1:
-        return True, "🎉 It's vacation time! No schedule available. 🎉"
+        # If vacation is toggled on, return only the toggle status
+        if toggle_mode == 1:
+            return True, "🎉 It's vacation time! No schedule available. 🎉"
 
-    # If vacation dates are set, check if today falls within the range
-    if start_date and end_date:
-        now = datetime.now(tz)  # Get current time in GMT+6
-        today = now.strftime("%d-%m-%Y")
-        if start_date <= today <= end_date:
-            end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
-            days_remaining = (end_date_obj - now).days
-            return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
+        # If vacation dates are set, check if today falls within the range
+        if start_date and end_date:
+            now = datetime.now(tz)  # Get current time in GMT+6
+            today = now.strftime("%d-%m-%Y")
+            if start_date <= today <= end_date:
+                end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
+                days_remaining = (end_date_obj - now).days
+                return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
 
     return False, ""
+
 
 
 
