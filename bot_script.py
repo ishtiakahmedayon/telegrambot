@@ -120,25 +120,31 @@ def is_vacation() -> tuple[bool, str]:
         if start_date and end_date:
             now = datetime.now(tz)  # Get current time in GMT+6
             today = now.strftime("%d-%m-%Y")
-            
+
+            # Debugging: Print current date and the start and end dates
+            print(f"Now: {now}, Today: {today}, Start Date: {start_date}, End Date: {end_date}")
+
+            # Convert start_date and end_date to datetime objects
+            start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+
+            print(f"Start Date Object: {start_date_obj}, End Date Object: {end_date_obj}")
+
             # If today's date is within the vacation period
-            if start_date <= today <= end_date:
-                # Parse the end date
-                end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
-                
+            if start_date_obj <= now <= end_date_obj:
                 # Calculate the remaining days
                 delta = end_date_obj - now
                 days_remaining = delta.days
-                
+
                 # If days remaining is negative, vacation is over
                 if days_remaining < 0:
                     return True, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
                 
-                return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining1111. 🎉"
+                return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
             else:
-                return True, "🎉 It's vacation time! No schedule available2222. 🎉"
+                return True, "🎉 It's vacation time! No schedule available. 2"
         
-        return True, "🎉 It's vacation time! No schedule available.33333 🎉"
+        return True, "🎉 It's vacation time! No schedule available. 3"
 
     return False, ""
 
