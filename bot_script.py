@@ -145,6 +145,7 @@ async def toggle_vacation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status = "enabled" if new_mode == 1 else "disabled"
     await update.message.reply_text(f"Vacation mode has been {status}.", parse_mode="Markdown")
 
+#vacation_dates--------------------------------------
 
 async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if start and end dates are provided
@@ -159,23 +160,22 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     try:
         # Validate date format (DD-MM-YYYY)
-        datetime.datetime.strptime(start_date, "%d-%m-%Y")
-        datetime.datetime.strptime(end_date, "%d-%m-%Y")
+        start_date_obj = datetime.datetime.strptime(start_date, "%d-%m-%Y")
+        end_date_obj = datetime.datetime.strptime(end_date, "%d-%m-%Y")
+
+        # Convert to YYYY-MM-DD format
+        start_date_db = start_date_obj.strftime("%Y-%m-%d")
+        end_date_db = end_date_obj.strftime("%Y-%m-%d")
 
         # Debugging: Log the dates to verify
-        print(f"Setting vacation from {start_date} to {end_date}")
+        print(f"Setting vacation from {start_date_db} to {end_date_db}")
 
         # Connect to the database
         conn = sqlite3.connect("schedule.db")
         cursor = conn.cursor()
 
-        # Debugging: Check if Vacation table exists and columns are correct
-        cursor.execute("PRAGMA table_info(Vacation)")
-        columns = cursor.fetchall()
-        print(f"Vacation table columns: {columns}")
-
-        # Update the vacation dates
-        cursor.execute("UPDATE Vacation SET start_date = ?, end_date = ?", (start_date, end_date))
+        # Update the vacation dates in the database
+        cursor.execute("UPDATE Vacation SET start_date = ?, end_date = ?", (start_date_db, end_date_db))
         conn.commit()
         conn.close()
 
@@ -190,6 +190,7 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
         print(f"Database error: {e}")
         await update.message.reply_text("There was an issue with the database. Please try again later.", parse_mode="Markdown")
         return
+
 
 
 #end of vacation functions-----------------------------------------------------------------------------------------------------------------------------
