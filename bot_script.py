@@ -124,9 +124,12 @@ def is_vacation() -> tuple[bool, str]:
             # Debugging: Print current date and the start and end dates
             print(f"Now: {now}, Today: {today}, Start Date: {start_date}, End Date: {end_date}")
 
-            # Convert start_date and end_date to datetime objects
+            # Convert start_date and end_date to datetime objects with timezone
             start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+            start_date_obj = tz.localize(start_date_obj)  # Make it timezone-aware
+
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+            end_date_obj = tz.localize(end_date_obj)  # Make it timezone-aware
 
             print(f"Start Date Object: {start_date_obj}, End Date Object: {end_date_obj}")
 
@@ -142,9 +145,9 @@ def is_vacation() -> tuple[bool, str]:
                 
                 return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
             else:
-                return True, "🎉 It's vacation time! No schedule available. 2"
+                return True, "🎉 It's vacation time! No schedule available. 🎉"
         
-        return True, "🎉 It's vacation time! No schedule available. 3"
+        return True, "🎉 It's vacation time! No schedule available. 🎉"
 
     return False, ""
 
