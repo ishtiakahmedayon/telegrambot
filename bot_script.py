@@ -142,7 +142,7 @@ def is_vacation() -> tuple[bool, str]:
                     conn.close()
                     return False, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
 
-                return True, f"🎉 It's vacation time! {days_remaining} day(s) and {hours_remaining} hour(s) remaining. 🎉"
+                return True, f"🎉🌴 Vacation mode: ON! No alarms, no stress, just chilling. 😎🛀\nYou've got {days_remaining} day(s) and {hours_remaining} hour(s) before the fun ends—make it count! ⏳\nAnd hey, don’t bother me, I’m on vacation too! But seriously, get that homework done before it’s too late. 📝😂"
 
             # If today is after the end date, mark vacation as over
             if now > end_date_obj:
@@ -153,7 +153,7 @@ def is_vacation() -> tuple[bool, str]:
                 conn.close()
                 return False, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
 
-        return True, "🎉 It's vacation time! No schedule available. 🎉"
+        return True, "🎉🌴 Vacation mode: ON! No alarms, no stress, just chilling.! The classes are on vacation, and so am I! 😎🎉""
 
     return False, ""
 
