@@ -156,24 +156,43 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     start_date, end_date = context.args
+
     try:
-        # Validate date format
+        # Validate date format (DD-MM-YYYY)
         datetime.datetime.strptime(start_date, "%d-%m-%Y")
         datetime.datetime.strptime(end_date, "%d-%m-%Y")
 
+        # Debugging: Log the dates to verify
+        print(f"Setting vacation from {start_date} to {end_date}")
+
+        # Connect to the database
         conn = sqlite3.connect("schedule.db")
         cursor = conn.cursor()
 
-        # Update start and end dates
+        # Debugging: Check if Vacation table exists and columns are correct
+        cursor.execute("PRAGMA table_info(Vacation)")
+        columns = cursor.fetchall()
+        print(f"Vacation table columns: {columns}")
+
+        # Update the vacation dates
         cursor.execute("UPDATE Vacation SET start_date = ?, end_date = ?", (start_date, end_date))
         conn.commit()
         conn.close()
 
         await update.message.reply_text(f"Vacation dates set from {start_date} to {end_date}.", parse_mode="Markdown")
+
     except ValueError:
         await update.message.reply_text("Invalid date format. Use DD-MM-YYYY.", parse_mode="Markdown")
+        return
 
-#end of vacation functions
+    except sqlite3.Error as e:
+        # Handle any SQLite errors
+        print(f"Database error: {e}")
+        await update.message.reply_text("There was an issue with the database. Please try again later.", parse_mode="Markdown")
+        return
+
+
+#end of vacation functions-----------------------------------------------------------------------------------------------------------------------------
 
 
 
