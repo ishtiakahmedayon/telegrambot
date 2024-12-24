@@ -97,30 +97,84 @@ def format_schedule(classes):
     return response
 
 
+#vacation functions-----------------------------------------------------------------------------------------------------------------------------------
+
+def is_vacation() -> tuple[bool, str]:
+    conn = sqlite3.connect("schedule.db")
+    cursor = conn.cursor()
+
+    # Fetch vacation status and dates
+    cursor.execute("SELECT toggle_mode, start_date, end_date FROM Vacation LIMIT 1")
+    vacation_data = cursor.fetchone()
+    conn.close()
+
+    toggle_mode, start_date, end_date = vacation_data
+
+    # If vacation is toggled on, return only the toggle status
+    if toggle_mode == 1:
+        return True, "🎉 It's vacation time! No schedule available. 🎉"
+
+    # If vacation dates are set, check if today falls within the range
+    if start_date and end_date:
+        now = datetime.now(tz)  # Get current time in GMT+6
+        today = now.strftime("%d-%m-%Y")
+        if start_date <= today <= end_date:
+            end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
+            days_remaining = (end_date_obj - now).days
+            return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
+
+    return False, ""
 
 
-# #function to get todays schedule
-# async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#     # Get the current time in GMT+6
-#     now = datetime.now(tz)
 
-#     # Format the day and date using the timezone
-#     today_day_full = now.strftime("%A")  # Full name of the day (e.g., "Thursday")
-#     today_day_abbr = now.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "THU")
-#     today_date = now.strftime("%d-%m-%Y")
+#function to toggle vacation status
 
-#     # Fetch the classes for today
-#     classes = get_classes_for_day(today_day_abbr)
+async def toggle_vacation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    conn = sqlite3.connect("schedule.db")
+    cursor = conn.cursor()
 
-#     # Format the response
-#     if not classes:
-#         response = f"❌ *No classes scheduled for today ({today_date}, {today_day_full})* ❌"
-#     else:
-#         response = f" *Today's Schedule ({today_date}, {today_day_full}):*\n\n"
-#         response += format_schedule(classes)
+    # Toggle vacation mode
+    cursor.execute("SELECT toggle_mode FROM Vacation LIMIT 1")
+    current_mode = cursor.fetchone()[0]
+    new_mode = 0 if current_mode == 1 else 1
+    cursor.execute("UPDATE Vacation SET toggle_mode = ?", (new_mode,))
 
-#     # Send the reply
-#     await update.message.reply_text(response, parse_mode="Markdown")
+    conn.commit()
+    conn.close()
+
+    status = "enabled" if new_mode == 1 else "disabled"
+    await update.message.reply_text(f"Vacation mode has been {status}.", parse_mode="Markdown")
+
+
+async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if start and end dates are provided
+    if len(context.args) != 2:
+        await update.message.reply_text(
+            "Please provide both start and end dates in DD-MM-YYYY format. Example: `/set_vacation 25-12-2024 31-12-2024`",
+            parse_mode="Markdown"
+        )
+        return
+
+    start_date, end_date = context.args
+    try:
+        # Validate date format
+        datetime.datetime.strptime(start_date, "%d-%m-%Y")
+        datetime.datetime.strptime(end_date, "%d-%m-%Y")
+
+        conn = sqlite3.connect("schedule.db")
+        cursor = conn.cursor()
+
+        # Update start and end dates
+        cursor.execute("UPDATE Vacation SET start_date = ?, end_date = ?", (start_date, end_date))
+        conn.commit()
+        conn.close()
+
+        await update.message.reply_text(f"Vacation dates set from {start_date} to {end_date}.", parse_mode="Markdown")
+    except ValueError:
+        await update.message.reply_text("Invalid date format. Use DD-MM-YYYY.", parse_mode="Markdown")
+
+#end of vacation functions
+
 
 #new function today class
 
@@ -128,6 +182,13 @@ def format_schedule(classes):
 
 
 async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    
+    # Check if vacation is active
+    vacation_active, vacation_message = is_vacation()
+    if vacation_active:
+        await update.message.reply_text(vacation_message, parse_mode="Markdown")
+        return
+    
     # Get the current time in GMT+6
     now = datetime.now(tz)
 
@@ -153,6 +214,12 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
 # Function to get tomorrow's schedule
 async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Check if vacation is active
+    vacation_active, vacation_message = is_vacation()
+    if vacation_active:
+        await update.message.reply_text(vacation_message, parse_mode="Markdown")
+        return
+    
     # Calculate tomorrow's date and day
     tomorrow_datetime = datetime.now(tz) + timedelta(days=1)
     tomorrow_day_full = tomorrow_datetime.strftime("%A")  # Full name of the day (e.g., "Friday")
@@ -261,39 +328,6 @@ async def thursdays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
         response = f" *Thursday's Schedule ({thursday_date})*: \n\n"
         response += format_schedule(classes)
 
-    await update.message.reply_text(response, parse_mode="Markdown")
-
-
-# Function to send bot's intro message when `/start` is called
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    response = "👋 Hello! I'm your Schedule Bot. I can provide you with your class schedule for each day.\n\n" \
-               "Here are the commands you can use:\n\n" \
-               "/today - Get today's schedule\n" \
-               "/tomorrow - Get tomorrow's schedule\n" \
-               "/sat - Get Saturday's schedule\n" \
-               "/sun - Get Sunday's schedule\n" \
-               "/mon - Get Monday's schedule\n" \
-               "/tue - Get Tuesday's schedule\n" \
-               "/wed - Get Wednesday's schedule\n" \
-               "/thu - Get Thursday's schedule\n\n" \
-               "Just type a command to get the corresponding day's schedule!"
-    
-    await update.message.reply_text(response, parse_mode="Markdown")
-
-# Function to show all available commands when `/help` is called
-async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    response = "ℹ️ *Available Commands:*\n\n" \
-               "/start - Introduction to the bot\n" \
-               "/help - Show this help message\n" \
-               "/today - Get today's class schedule\n" \
-               "/tomorrow - Get tomorrow's class schedule\n" \
-               "/sat - Get Saturday's class schedule\n" \
-               "/sun - Get Sunday's class schedule\n" \
-               "/mon - Get Monday's class schedule\n" \
-               "/tue - Get Tuesday's class schedule\n" \
-               "/wed - Get Wednesday's class schedule\n" \
-               "/thu - Get Thursday's class schedule\n"
-    
     await update.message.reply_text(response, parse_mode="Markdown")
     
 #------------------------------------------
@@ -497,7 +531,7 @@ async def delete_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if len(context.args) < 2:
             await update.message.reply_text(
                 "❌ Please provide the day and class name in the format: `/delete_class DAY CLASS_NAME`\n"
-                "Example: `/delete_class MON Physics`",
+                "Example: `/del_class MON Physics`",
                 parse_mode="Markdown",
             )
             return
@@ -535,7 +569,7 @@ async def delete_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 #delete all class ----------------------
 async def delete_all_classes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if len(context.args) != 1:
-        await update.message.reply_text("❌ Please provide a single day (e.g., /delete_all_classes MON).")
+        await update.message.reply_text("❌ Please provide a single day (e.g., /del_all MON).")
         return
 
     day = context.args[0].strip().upper()
@@ -601,6 +635,39 @@ async def clear_bot_messages(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await confirmation_msg.delete()
     except Exception as e:
         print(f"Could not delete confirmation message: {e}")
+        
+
+# Function to send bot's intro message when `/start` is called
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    response = "👋 Hello! I'm your Schedule Bot. I can provide you with your class schedule for each day.\n\n" \
+               "Here are the commands you can use:\n\n" \
+               "/today - Get today's schedule\n" \
+               "/tomorrow - Get tomorrow's schedule\n" \
+               "/sat - Get Saturday's schedule\n" \
+               "/sun - Get Sunday's schedule\n" \
+               "/mon - Get Monday's schedule\n" \
+               "/tue - Get Tuesday's schedule\n" \
+               "/wed - Get Wednesday's schedule\n" \
+               "/thu - Get Thursday's schedule\n\n" \
+               "Just type a command to get the corresponding day's schedule!"
+    
+    await update.message.reply_text(response, parse_mode="Markdown")
+
+# Function to show all available commands when `/help` is called
+async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    response = "ℹ️ *Available Commands:*\n\n" \
+               "/start - Introduction to the bot\n" \
+               "/help - Show this help message\n" \
+               "/today - Get today's class schedule\n" \
+               "/tomorrow - Get tomorrow's class schedule\n" \
+               "/sat - Get Saturday's class schedule\n" \
+               "/sun - Get Sunday's class schedule\n" \
+               "/mon - Get Monday's class schedule\n" \
+               "/tue - Get Tuesday's class schedule\n" \
+               "/wed - Get Wednesday's class schedule\n" \
+               "/thu - Get Thursday's class schedule\n"
+    
+    await update.message.reply_text(response, parse_mode="Markdown")
 
 
 
@@ -627,8 +694,6 @@ def main():
     # Add this command handler in the main function
     application.add_handler(CommandHandler("time", current_time))
     
-    # Add the /tomorrow command handler
-    application.add_handler(CommandHandler("tomorrow", tomorrows_schedule))
 
     # Set up the scheduler (APScheduler) to send the message every day at 8 AM
     scheduler = AsyncIOScheduler()
