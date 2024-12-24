@@ -143,12 +143,21 @@ def is_vacation() -> tuple[bool, str]:
                     return False, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
                 
                 return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
-            else:
-                return True, "🎉 It's vacation time! No schedule available. 🎉"
-        
+            
+            # If today is after the end date, mark vacation as over
+            if now > end_date_obj:
+                # Update the database to toggle off vacation mode
+                conn = sqlite3.connect("schedule.db")
+                cursor = conn.cursor()
+                cursor.execute("UPDATE Vacation SET toggle_mode = 0 WHERE toggle_mode = 1")
+                conn.commit()
+                conn.close()
+                return False, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
+
         return True, "🎉 It's vacation time! No schedule available. 🎉"
 
     return False, ""
+
 
 
 
