@@ -171,7 +171,7 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
         start_date_obj = datetime.strptime(start_date, "%d-%m-%Y")
         end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
 
-        # Convert to YYYY-MM-DD format
+        # Convert to YYYY-MM-DD format for the database
         start_date_db = start_date_obj.strftime("%Y-%m-%d")
         end_date_db = end_date_obj.strftime("%Y-%m-%d")
 
@@ -182,12 +182,16 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
         conn = sqlite3.connect("schedule.db")
         cursor = conn.cursor()
 
-        # Update the vacation dates in the database
-        cursor.execute("UPDATE Vacation SET start_date = ?, end_date = ?", (start_date_db, end_date_db))
+        # Update the vacation dates in the database and toggle vacation mode to enabled (1)
+        cursor.execute("UPDATE Vacation SET start_date = ?, end_date = ?, toggle_mode = ?",
+                       (start_date_db, end_date_db, 1))  # Set toggle_mode to 1 (vacation mode enabled)
         conn.commit()
         conn.close()
 
-        await update.message.reply_text(f"Vacation dates set from {start_date} to {end_date}.", parse_mode="Markdown")
+        await update.message.reply_text(
+            f"Vacation dates set from {start_date} to {end_date} and vacation mode is now enabled! 🎉",
+            parse_mode="Markdown"
+        )
 
     except ValueError:
         await update.message.reply_text("Invalid date format. Use DD-MM-YYYY.", parse_mode="Markdown")
@@ -198,6 +202,7 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
         print(f"Database error: {e}")
         await update.message.reply_text("There was an issue with the database. Please try again later.", parse_mode="Markdown")
         return
+
 
 
 
