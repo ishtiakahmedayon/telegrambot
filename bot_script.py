@@ -160,8 +160,8 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     try:
         # Validate date format (DD-MM-YYYY)
-        start_date_obj = datetime.datetime.strptime(start_date, "%d-%m-%Y")
-        end_date_obj = datetime.datetime.strptime(end_date, "%d-%m-%Y")
+        start_date_obj = datetime.strptime(start_date, "%d-%m-%Y")
+        end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
 
         # Convert to YYYY-MM-DD format
         start_date_db = start_date_obj.strftime("%Y-%m-%d")
