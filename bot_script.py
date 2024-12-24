@@ -116,19 +116,20 @@ def is_vacation() -> tuple[bool, str]:
 
     # If vacation is toggled on, return only the toggle status
     if toggle_mode == 1:
-        return True, "🎉🌴 Time for a break! The classes are on vacation, and so am I! 😎🛀\nNo schedules, no homework, just pure relaxation...\nBut don't forget to finish your coding homework by Jan 1! 📅👨‍💻🎉"
-
-
-    # If vacation dates are set, check if today falls within the range
-    if start_date and end_date:
-        now = datetime.now(tz)  # Get current time in GMT+6
-        today = now.strftime("%d-%m-%Y")
-        if start_date <= today <= end_date:
-            end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
-            days_remaining = (end_date_obj - now).days
-            return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
+        # If vacation mode is toggled, check if dates are available
+        if start_date and end_date:
+            now = datetime.now(tz)  # Get current time in GMT+6
+            today = now.strftime("%d-%m-%Y")
+            if start_date <= today <= end_date:
+                end_date_obj = datetime.strptime(end_date, "%d-%m-%Y")
+                days_remaining = (end_date_obj - now).days
+                return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
+            else:
+                return True, "🎉 It's vacation time! No schedule available. 🎉"
+        return True, "🎉 It's vacation time! No schedule available. 🎉"
 
     return False, ""
+
 
 
 
