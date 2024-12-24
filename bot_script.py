@@ -153,7 +153,7 @@ def is_vacation() -> tuple[bool, str]:
                 conn.close()
                 return False, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
 
-        return True, "🎉🌴 Vacation mode: ON! No alarms, no stress, just chilling.! The classes are on vacation, and so am I! 😎🎉""
+        return True, "🎉🌴 Vacation mode: ON! No alarms, no stress, just chilling.! The classes are on vacation, and so am I! 😎🎉"
 
     return False, ""
 
