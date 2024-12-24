@@ -206,6 +206,39 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
+
+
+
+
+
+
+# Function to show vacation list from the database
+def show_vacations() -> str:
+    conn = sqlite3.connect("schedule.db")
+    cursor = conn.cursor()
+
+    # Fetch all vacation records from the Vacation table
+    cursor.execute("SELECT id, toggle_mode, start_date, end_date FROM Vacation")
+    vacation_data = cursor.fetchall()
+
+    conn.close()
+
+    # Prepare the vacation list response
+    if vacation_data:
+        response = "Vacation List:\n\n"
+        for record in vacation_data:
+            id, toggle_mode, start_date, end_date = record
+            status = "Enabled" if toggle_mode == 1 else "Disabled"
+            response += f"ID: {id}, Status: {status}, Start Date: {start_date}, End Date: {end_date}\n"
+    else:
+        response = "No vacation records found."
+
+    return response
+
+# Command handler function for /vacation_list
+async def vacation_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    response = show_vacations()
+    await update.message.reply_text(response, parse_mode="Markdown")
 #end of vacation functions-----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -784,9 +817,9 @@ def main():
     
     
     #vacation commands----
-    application.add_handler(CommandHandler("toggle_vacation", toggle_vacation))
-    application.add_handler(CommandHandler("set_vacation", set_vacation_dates)) 
-
+    application.add_handler(CommandHandler("toggle_vac", toggle_vacation))
+    application.add_handler(CommandHandler("set_vac", set_vacation_dates)) 
+    application.add_handler(CommandHandler("vac_list", vacation_list))
     
 
     # Start the bot
