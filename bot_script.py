@@ -176,10 +176,10 @@ async def set_vacation_dates(update: Update, context: ContextTypes.DEFAULT_TYPE)
 #end of vacation functions
 
 
+
+
+
 #new function today class
-
-
-
 
 async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
@@ -750,7 +750,10 @@ def main():
     application.add_handler(CommandHandler("del_all", delete_all_classes))
     
     
-    
+    #vacation commands----
+    application.add_handler(CommandHandler("toggle_vacation", toggle_vacation))
+    application.add_handler(CommandHandler("set_vacation", set_vacation_dates)) 
+
     
 
     # Start the bot
