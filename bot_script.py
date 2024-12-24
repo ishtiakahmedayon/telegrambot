@@ -134,11 +134,11 @@ def is_vacation() -> tuple[bool, str]:
                 if days_remaining < 0:
                     return True, "🎉 Vacation is over! 🏫 Time to get back to studying! 🎓"
                 
-                return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining. 🎉"
+                return True, f"🎉 It's vacation time! {days_remaining} day(s) remaining1111. 🎉"
             else:
-                return True, "🎉 It's vacation time! No schedule available. 🎉"
+                return True, "🎉 It's vacation time! No schedule available2222. 🎉"
         
-        return True, "🎉 It's vacation time! No schedule available. 🎉"
+        return True, "🎉 It's vacation time! No schedule available.33333 🎉"
 
     return False, ""
 
