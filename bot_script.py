@@ -7,6 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Conve
 import logging
 import time
 import random
+import asyncio
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -734,7 +735,6 @@ async def clear_bot_messages(update: Update, context: ContextTypes.DEFAULT_TYPE)
         print(f"Could not delete confirmation message: {e}")
         
 #Fun functions -----------------------------------------------------------------------
-
 # List of "techy" messages to display
 TECHY_MESSAGES = [
     "Initializing mainframe breach...",
@@ -752,26 +752,28 @@ async def hack(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Extract the target if mentioned (e.g., /hack @username)
     target = " ".join(context.args) if context.args else "unknown target"
     
-    # Start the "hacking" sequence
-    await update.message.reply_text(f"💻 Starting hack on {target}...")
+    # Start the "hacking" sequence with an initial message
+    message = await update.message.reply_text(f"💻 Starting hack on {target}...\nProgress: 0%")
 
     # Simulate progress and messages
     progress = 0
     while progress < 100:
-        # Send a random "techy" message
-        await update.message.reply_text(random.choice(TECHY_MESSAGES))
-        
         # Increment progress
         progress += random.randint(10, 20)
         if progress > 100:
             progress = 100
         
-        # Simulate delay and update progress
-        await update.message.reply_text(f"Progress: {progress}%")
-        time.sleep(1)
+        # Pick a random techy message
+        techy_message = random.choice(TECHY_MESSAGES)
+        
+        # Edit the message to update progress and show the current action
+        await message.edit_text(f"💻 Hacking {target}...\n{techy_message}\nProgress: {progress}%")
+        
+        # Simulate delay
+        await asyncio.sleep(1)
 
     # Final message
-    await update.message.reply_text(f"🎉 Hack on {target} completed successfully!")
+    await message.edit_text(f"🎉 Hack on {target} completed successfully!\nProgress: 100%")
         
 
 # Function to send bot's intro message when `/start` is called
