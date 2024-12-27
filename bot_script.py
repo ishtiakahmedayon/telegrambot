@@ -808,12 +808,12 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     response = "ℹ️ *Available Configuration Commands:*\n\n" \
-               "/add_schedule - Step by step process to add class\n" \
-               "/add_class - Shortcut for adding a class\n" \
-               "/delete_schedule - Step by step process to delete a class\n" \
-               "/del_class - Shortcut for deleting a class\n" \
-               "/del_all - delete all classes of a specific day\n" \
-               "/set_vac - Set vacation date to turn on vacation mode\n" \
+               "/add\\_schedule - Step by step process to add class\n" \
+               "/add\\_class - Shortcut for adding a class\n" \
+               "/delete\\_schedule - Step by step process to delete a class\n" \
+               "/del\\_class - Shortcut for deleting a class\n" \
+               "/del\\_all - delete all classes of a specific day\n" \
+               "/set\\_vac - Set vacation date to turn on vacation mode\n" \
     
     await update.message.reply_text(response, parse_mode="Markdown")
 
