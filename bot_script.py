@@ -5,6 +5,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 import logging
+import time
+import random
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -731,6 +733,46 @@ async def clear_bot_messages(update: Update, context: ContextTypes.DEFAULT_TYPE)
     except Exception as e:
         print(f"Could not delete confirmation message: {e}")
         
+#Fun functions -----------------------------------------------------------------------
+
+# List of "techy" messages to display
+TECHY_MESSAGES = [
+    "Initializing mainframe breach...",
+    "Bypassing firewall...",
+    "Accessing encrypted database...",
+    "Establishing secure connection...",
+    "Injecting malicious script...",
+    "Harvesting sensitive data...",
+    "Covering tracks...",
+    "Operation complete! Target compromised."
+]
+
+# Function to simulate the /hack command
+async def hack(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Extract the target if mentioned (e.g., /hack @username)
+    target = " ".join(context.args) if context.args else "unknown target"
+    
+    # Start the "hacking" sequence
+    await update.message.reply_text(f"💻 Starting hack on {target}...")
+
+    # Simulate progress and messages
+    progress = 0
+    while progress < 100:
+        # Send a random "techy" message
+        await update.message.reply_text(random.choice(TECHY_MESSAGES))
+        
+        # Increment progress
+        progress += random.randint(10, 20)
+        if progress > 100:
+            progress = 100
+        
+        # Simulate delay and update progress
+        await update.message.reply_text(f"Progress: {progress}%")
+        time.sleep(1)
+
+    # Final message
+    await update.message.reply_text(f"🎉 Hack on {target} completed successfully!")
+        
 
 # Function to send bot's intro message when `/start` is called
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -858,11 +900,13 @@ def main():
     application.add_handler(CommandHandler("del_all", delete_all_classes))
     
     
-    #vacation commands----
+    #vacation commands--------------------------------------------------
     application.add_handler(CommandHandler("toggle_vac", toggle_vacation))
     application.add_handler(CommandHandler("set_vac", set_vacation_dates)) 
     application.add_handler(CommandHandler("vac_list", vacation_list))
     
+    #Fun Functions -----------------------------------------------------
+    application.add_handler(CommandHandler("hack", hack))
 
     # Start the bot
     logger.info("Starting bot...")
