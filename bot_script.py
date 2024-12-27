@@ -764,6 +764,18 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     await update.message.reply_text(response, parse_mode="Markdown")
 
+async def config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    response = "ℹ️ *Available Configuration Commands:*\n\n" \
+               "/add_schedule - Step by step process to add class\n" \
+               "/add_class - Shortcut for adding a class\n" \
+               "/delete_schedule - Step by step process to delete a class\n" \
+               "/del_class - Shortcut for deleting a class\n" \
+               "/del_all - delete all classes of a specific day\n" \
+               "/set_vac - Set vacation date to turn on vacation mode\n" \
+    
+    await update.message.reply_text(response, parse_mode="Markdown")
+
+
 
 
 # Main function to start the bot
@@ -773,6 +785,7 @@ def main():
     # Add the handlers for each command
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
+    application.add_handler(CommandHandler("config", config))
     application.add_handler(CommandHandler("today", todays_schedule))
     application.add_handler(CommandHandler("tomorrow", tomorrows_schedule))
     application.add_handler(CommandHandler("sat", saturdays_schedule))
