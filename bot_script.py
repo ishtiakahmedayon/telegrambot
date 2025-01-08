@@ -295,7 +295,10 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     today_day_abbr = now.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "THU")
     today_date = now.strftime("%d-%m-%Y")
     today_date1 = now.strftime("%Y-%m-%d")  # Format for database query
-
+    
+    # Cleanup old tests
+    cleanup_old_tests()
+    
     # Fetch the classes for today, sorted by time
     classes = get_classes_for_day(today_day_abbr)
 
@@ -315,7 +318,7 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     # Add class tests to the response
     if tests:
-        response += "\n\n📚 *Class Tests Today:* 📚\n"
+        response += "\n\n📝 *Class Tests Today:* \n"
         response += "\n".join([f"{subject}: {details}" for subject, details in tests])
     
 
@@ -362,7 +365,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Include tests in the response
     if tests:
-        response += f"\n\n*Class Tests on {tomorrow_date}:*\n"
+        response += f"\n\n*📝 Class Tests Tomorrow:*\n":
         response += "\n".join([f"{subject}: {details}" for subject, details in tests])
     
     # Log the final response
