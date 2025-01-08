@@ -819,10 +819,10 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cleanup_old_tests()  # Clean up old tests after listing
 
     if not tests:
-        await update.message.reply_text("No tests scheduled.")
+        await update.message.reply_text("Chill bro! No Upcoming Class tests found.")
     else:
         response = "Upcoming Tests:\n"
-        response += "\n".join([f"📝 {test_date} | {subject}: {details}" for test_id, test_date, subject, details in tests])
+        response += "\n".join([f"📝 {test_date} | {subject}:  {details}" for test_id, test_date, subject, details in tests])
         await update.message.reply_text(response)
 
 
