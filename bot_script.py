@@ -868,6 +868,17 @@ async def send_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text("Here is the schedule!")
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
+        
+async def send_syllabus(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Path to the PDF file
+    file_path = "syllabus.pdf"
+
+    # Check if the file exists
+    if os.path.exists(file_path):
+        # Send the file
+        await update.message.reply_document(document=open(file_path, 'rb'), caption="Here is the schedule.")
+    else:
+        await update.message.reply_text("Sorry, I couldn't find the schedule file.")
 
      
 #Fun functions -----------------------------------------------------------------------
@@ -1056,6 +1067,7 @@ def main():
     #Fun Functions -----------------------------------------------------
     application.add_handler(CommandHandler("hack", hack))
     application.add_handler(CommandHandler("schedule", send_schedule))
+    application.add_handler(CommandHandler("syllabus", send_syllabus))
 
     # Start the bot
     logger.info("Starting bot...")
