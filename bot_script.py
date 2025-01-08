@@ -932,6 +932,9 @@ async def config(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                "/delete\\_schedule - Step by step process to delete a class\n" \
                "/del\\_class - Shortcut for deleting a class\n" \
                "/del\\_all - delete all classes of a specific day\n" \
+               "/add\\_ct - add a ct \n" \
+               "/del\\_ct - delete a ct by date\n" \
+               "/ct - to get all ct list\n" \
                "/set\\_vac - Set vacation date to turn on vacation mode\n" \
     
     await update.message.reply_text(response, parse_mode="Markdown")
@@ -1028,7 +1031,7 @@ def main():
     
     application.add_handler(CommandHandler("add_ct", add_test))
     application.add_handler(CommandHandler("ct", list_tests))
-    application.add_handler(CommandHandler("delete_ct", delete_test))
+    application.add_handler(CommandHandler("del_ct", delete_test))
     
     #Fun Functions -----------------------------------------------------
     application.add_handler(CommandHandler("hack", hack))
