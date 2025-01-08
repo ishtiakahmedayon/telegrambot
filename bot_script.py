@@ -822,8 +822,12 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Chill bro! No Upcoming Class tests found.")
     else:
         response = "Upcoming Tests:\n"
-        response += "\n".join([f"📝 {test_date} | {subject}:  {details}" for test_id, test_date, subject, details in tests])
+        for test_id, test_date, subject, details in tests:
+            formatted_date = datetime.strptime(test_date, "%Y-%m-%d").strftime("%d-%m-%Y")
+            response += f"📝 {formatted_date} | {subject}: {details}\n"
+        
         await update.message.reply_text(response)
+
 
 
 # Command to delete a test by date
