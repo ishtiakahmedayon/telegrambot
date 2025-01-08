@@ -338,6 +338,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     tomorrow_day_full = tomorrow_datetime.strftime("%A")  # Full name of the day (e.g., "Friday")
     tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "FRI")
     tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
+    tomorrow_date1 = tomorrow_datetime.strftime("%Y-%m-%d")
 
     # Cleanup old tests
     cleanup_old_tests()
@@ -348,7 +349,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Fetch class tests for tomorrow
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date,))
+    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date1,))
     tests = cursor.fetchall()
     conn.close()
 
