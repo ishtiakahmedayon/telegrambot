@@ -876,9 +876,9 @@ async def send_syllabus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if the file exists
     if os.path.exists(file_path):
         # Send the file
-        await update.message.reply_document(document=open(file_path, 'rb'), caption="Here is the schedule.")
+        await update.message.reply_document(document=open(file_path, 'rb'), caption="Here is the syllabus.")
     else:
-        await update.message.reply_text("Sorry, I couldn't find the schedule file.")
+        await update.message.reply_text("Sorry, I couldn't find the file.")
 
      
 #Fun functions -----------------------------------------------------------------------
