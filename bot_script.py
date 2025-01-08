@@ -365,7 +365,7 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Include tests in the response
     if tests:
-        response += f"\n\n*📝 Class Tests Tomorrow:*\n":
+        response += f"\n\n*📝 Class Tests Tomorrow:*\n"
         response += "\n".join([f"{subject}: {details}" for subject, details in tests])
     
     # Log the final response
