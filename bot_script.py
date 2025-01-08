@@ -991,7 +991,7 @@ def main():
     #class tests--------------------------------------------------------
     
     application.add_handler(CommandHandler("add_ct", add_test))
-    application.add_handler(CommandHandler("list_ct", list_tests))
+    application.add_handler(CommandHandler("ct", list_tests))
     application.add_handler(CommandHandler("delete_ct", delete_test))
     
     #Fun Functions -----------------------------------------------------
