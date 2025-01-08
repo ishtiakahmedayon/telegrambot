@@ -294,9 +294,17 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     today_day_full = now.strftime("%A")  # Full name of the day (e.g., "Thursday")
     today_day_abbr = now.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "THU")
     today_date = now.strftime("%d-%m-%Y")
+    today_date1 = now.strftime("%Y-%m-%d")  # Format for database query
 
     # Fetch the classes for today, sorted by time
     classes = get_classes_for_day(today_day_abbr)
+
+    # Fetch the class tests for today
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (today_date1,))
+    tests = cursor.fetchall()
+    conn.close()
 
     # Format the response
     if not classes:
@@ -305,8 +313,15 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         response = f" *Today's Schedule ({today_date}, {today_day_full}):*\n\n"
         response += format_schedule(classes)
 
+    # Add class tests to the response
+    if tests:
+        response += "\n\n📚 *Class Tests Today:* 📚\n"
+        response += "\n".join([f"{subject}: {details}" for subject, details in tests])
+    
+
     # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
+
     
     
     
@@ -788,7 +803,7 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No tests scheduled.")
     else:
         response = "Upcoming Tests:\n"
-        response += "\n".join([f"ID {test_id} | {test_date} | {subject}: {details}" for test_id, test_date, subject, details in tests])
+        response += "\n".join([f" {test_id} | {test_date} | {subject}: {details}" for test_id, test_date, subject, details in tests])
         await update.message.reply_text(response)
 
 
