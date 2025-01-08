@@ -339,21 +339,36 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "FRI")
     tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
 
+    # Cleanup old tests
+    cleanup_old_tests()
 
     # Fetch the classes for tomorrow
     classes = get_classes_for_day(tomorrow_day_abbr)
-    
+
+    # Fetch class tests for tomorrow
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date,))
+    tests = cursor.fetchall()
+    conn.close()
+
     # Format the response
     if not classes:
         response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date}, {tomorrow_day_full})* ❌"
     else:
         response = f" *Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
         response += format_schedule(classes)
-        
+
+    # Include tests in the response
+    if tests:
+        response += f"\n\n*Class Tests on {tomorrow_date}:*\n"
+        response += "\n".join([f"{subject}: {details}" for subject, details in tests])
+    
     # Log the final response
     logger.info(f"Response sent to user:\n{response}")
     # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
+
 
 
 # Other daily schedule functions follow the same pattern as `todays_schedule` and `tomorrows_schedule`.
@@ -803,27 +818,29 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No tests scheduled.")
     else:
         response = "Upcoming Tests:\n"
-        response += "\n".join([f" {test_id} | {test_date} | {subject}: {details}" for test_id, test_date, subject, details in tests])
+        response += "\n".join([f"📝 {test_date} | {subject}: {details}" for test_id, test_date, subject, details in tests])
         await update.message.reply_text(response)
 
 
-# Command to delete a test by ID
+# Command to delete a test by date
 async def delete_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        await update.message.reply_text("Usage: /delete_test test_id")
+        await update.message.reply_text("Usage: /delete_test YYYY-MM-DD")
         return
 
-    test_id = context.args[0]
+    test_date = context.args[0]
     conn = connect_db()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM ClassTests WHERE id = ?", (test_id,))
+    # Delete all tests scheduled for the specified date
+    cursor.execute("DELETE FROM ClassTests WHERE test_date = ?", (test_date,))
     conn.commit()
     conn.close()
 
     cleanup_old_tests()  # Clean up old tests after deletion
 
-    await update.message.reply_text(f"Test with ID {test_id} deleted.")
+    await update.message.reply_text(f"All tests scheduled for {test_date} have been deleted.")
+
 
 #------------------------------------end of class tests--------------------------------------------------------
 
