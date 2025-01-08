@@ -772,28 +772,25 @@ async def add_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"Test added on {test_date} for {subject}.")
 
-# Command to list class tests for a specific date
+# Command to list all class tests regardless of date
 async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) != 1:
-        await update.message.reply_text("Usage: /list_tests YYYY-MM-DD")
-        return
-
-    test_date = context.args[0]
     conn = connect_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (test_date,))
+    # Select all tests from the ClassTests table
+    cursor.execute("SELECT id, test_date, subject, details FROM ClassTests ORDER BY test_date ASC")
     tests = cursor.fetchall()
     conn.close()
 
     cleanup_old_tests()  # Clean up old tests after listing
 
     if not tests:
-        await update.message.reply_text(f"No tests scheduled for {test_date}.")
+        await update.message.reply_text("No tests scheduled.")
     else:
-        response = f"Tests on {test_date}:\n"
-        response += "\n".join([f"{subject}: {details}" for subject, details in tests])
+        response = "Upcoming Tests:\n"
+        response += "\n".join([f"ID {test_id} | {test_date} | {subject}: {details}" for test_id, test_date, subject, details in tests])
         await update.message.reply_text(response)
+
 
 # Command to delete a test by ID
 async def delete_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -993,9 +990,9 @@ def main():
     
     #class tests--------------------------------------------------------
     
-    application.add_handler(CommandHandler("add_test", add_test))
-    application.add_handler(CommandHandler("list_tests", list_tests))
-    application.add_handler(CommandHandler("delete_test", delete_test))
+    application.add_handler(CommandHandler("add_ct", add_test))
+    application.add_handler(CommandHandler("list_ct", list_tests))
+    application.add_handler(CommandHandler("delete_ct", delete_test))
     
     #Fun Functions -----------------------------------------------------
     application.add_handler(CommandHandler("hack", hack))
