@@ -734,6 +734,89 @@ async def clear_bot_messages(update: Update, context: ContextTypes.DEFAULT_TYPE)
     except Exception as e:
         print(f"Could not delete confirmation message: {e}")
         
+    #------------------------------------------------ Class tests --------------------------------------
+    
+
+# Connect to the SQLite database
+def connect_db():
+    return sqlite3.connect("schedule.db")
+
+# Cleanup old tests function
+def cleanup_old_tests():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    cursor.execute("DELETE FROM ClassTests WHERE test_date < ?", (today,))
+    conn.commit()
+    conn.close()
+
+# Command to add a class test
+async def add_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 3:
+        await update.message.reply_text(
+            "Usage: /add_test YYYY-MM-DD subject details"
+        )
+        return
+
+    test_date, subject, details = context.args[0], context.args[1], ' '.join(context.args[2:])
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("INSERT INTO ClassTests (test_date, subject, details) VALUES (?, ?, ?)",
+                   (test_date, subject, details))
+    conn.commit()
+    conn.close()
+
+    cleanup_old_tests()  # Clean up old tests after adding a new one
+
+    await update.message.reply_text(f"Test added on {test_date} for {subject}.")
+
+# Command to list class tests for a specific date
+async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        await update.message.reply_text("Usage: /list_tests YYYY-MM-DD")
+        return
+
+    test_date = context.args[0]
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (test_date,))
+    tests = cursor.fetchall()
+    conn.close()
+
+    cleanup_old_tests()  # Clean up old tests after listing
+
+    if not tests:
+        await update.message.reply_text(f"No tests scheduled for {test_date}.")
+    else:
+        response = f"Tests on {test_date}:\n"
+        response += "\n".join([f"{subject}: {details}" for subject, details in tests])
+        await update.message.reply_text(response)
+
+# Command to delete a test by ID
+async def delete_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        await update.message.reply_text("Usage: /delete_test test_id")
+        return
+
+    test_id = context.args[0]
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM ClassTests WHERE id = ?", (test_id,))
+    conn.commit()
+    conn.close()
+
+    cleanup_old_tests()  # Clean up old tests after deletion
+
+    await update.message.reply_text(f"Test with ID {test_id} deleted.")
+
+#------------------------------------end of class tests--------------------------------------------------------
+
+
+     
 #Fun functions -----------------------------------------------------------------------
 # List of "techy" messages to display
 TECHY_MESSAGES = [
@@ -774,6 +857,7 @@ async def hack(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     # Final message
     await message.edit_text(f"🎉 Hack on {target} completed successfully!\nProgress: 100%")
+    
         
 
 # Function to send bot's intro message when `/start` is called
@@ -906,6 +990,12 @@ def main():
     application.add_handler(CommandHandler("toggle_vac", toggle_vacation))
     application.add_handler(CommandHandler("set_vac", set_vacation_dates)) 
     application.add_handler(CommandHandler("vac_list", vacation_list))
+    
+    #class tests--------------------------------------------------------
+    
+    application.add_handler(CommandHandler("add_test", add_test))
+    application.add_handler(CommandHandler("list_tests", list_tests))
+    application.add_handler(CommandHandler("delete_test", delete_test))
     
     #Fun Functions -----------------------------------------------------
     application.add_handler(CommandHandler("hack", hack))
