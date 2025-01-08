@@ -853,6 +853,21 @@ async def delete_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #------------------------------------end of class tests--------------------------------------------------------
 
 
+async def send_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Specify the path to the schedule.png
+    file_path = "schedule.png"
+
+    if not os.path.exists(file_path):
+        await update.message.reply_text(f"Sorry, I couldn't find the file '{file_path}'!")
+        return
+
+    try:
+        # Send the image as a reply
+        await update.message.reply_photo(photo=open(file_path, 'rb'))
+        await update.message.reply_text("Here is the schedule!")
+    except Exception as e:
+        await update.message.reply_text(f"An error occurred: {e}")
+
      
 #Fun functions -----------------------------------------------------------------------
 # List of "techy" messages to display
@@ -1039,6 +1054,7 @@ def main():
     
     #Fun Functions -----------------------------------------------------
     application.add_handler(CommandHandler("hack", hack))
+    application.add_handler(CommandHandler("schedule", send_schedule))
 
     # Start the bot
     logger.info("Starting bot...")
