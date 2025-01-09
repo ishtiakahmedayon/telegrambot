@@ -822,13 +822,13 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not tests:
         await update.message.reply_text("Chill bro! No Upcoming Class tests found.")
     else:
-        response = "Upcoming Class Tests:\n"
+        response = "(╯‵□′)╯︵┻━┻  Upcoming Class Tests: \n"
         today = datetime.now().date()
 
         for test_id, test_date, subject, details in tests:
             test_date_obj = datetime.strptime(test_date, "%Y-%m-%d").date()
             days_remaining = (test_date_obj - today).days
-            response += f"📝 {test_date_obj.strftime('%d-%m-%Y')} | {subject}: {details} - {days_remaining} day(s) remaining\n"
+            response += f"📝 {test_date_obj.strftime('%d-%m-%Y')} | {subject}:\n {details} | ⌛{days_remaining} day(s) remaining\n"
         
         await update.message.reply_text(response)
 
