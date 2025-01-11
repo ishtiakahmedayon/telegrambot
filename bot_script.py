@@ -822,7 +822,7 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not tests:
         await update.message.reply_text("Chill bro! No Upcoming Class tests found.")
     else:
-        response = "(╯‵□′)╯︵┻━┻  Upcoming Class Tests: \n"
+        response = "(╯‵□′)╯︵┻━┻  \nUpcoming Class Tests: \n\n"
         today = datetime.now().date()
 
         for test_id, test_date, subject, details in tests:
