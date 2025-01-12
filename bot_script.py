@@ -366,14 +366,18 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Escape special characters in tests for MarkdownV2
     # Escape special characters in tests for MarkdownV2
+# Escape backticks and backslashes properly for MarkdownV2
     if tests:
         response += "\n\n*📝 Class Tests Tomorrow:*\n"
-        response += "\n".join(
-            [f"`{subject.replace('`', '\\`')}: {details.replace('`', '\\`')}`".replace('\\', '\\\\') for subject, details in tests]
-        )
+        for subject, details in tests:
+            # Escape the backticks and backslashes separately
+            escaped_subject = subject.replace('`', '\\`').replace('\\', '\\\\')
+            escaped_details = details.replace('`', '\\`').replace('\\', '\\\\')
+            response += f"`{escaped_subject}: {escaped_details}`\n"
     
     # Send the reply
     await update.message.reply_text(response, parse_mode="MarkdownV2")
+
 
 
 
