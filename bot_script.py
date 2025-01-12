@@ -334,13 +334,13 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Check if vacation is active
     vacation_active, vacation_message = is_vacation()
     if vacation_active:
-        await update.message.reply_text(vacation_message, parse_mode="MarkdownV2")
+        await update.message.reply_text(vacation_message, parse_mode="Markdown")
         return
     
     # Calculate tomorrow's date and day
     tomorrow_datetime = datetime.now(tz) + timedelta(days=1)
-    tomorrow_day_full = tomorrow_datetime.strftime("%A")
-    tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()
+    tomorrow_day_full = tomorrow_datetime.strftime("%A")  # Full name of the day (e.g., "Friday")
+    tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "FRI")
     tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
     tomorrow_date1 = tomorrow_datetime.strftime("%Y-%m-%d")
 
@@ -361,26 +361,18 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not classes:
         response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date}, {tomorrow_day_full})* ❌"
     else:
-        response = f"*Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
+        response = f" *Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
         response += format_schedule(classes)
 
-    # Escape special characters in tests for MarkdownV2
-    # Escape special characters in tests for MarkdownV2
-# Escape backticks and backslashes properly for MarkdownV2
+    # Include tests in the response
     if tests:
-        response += "\n\n*📝 Class Tests Tomorrow:*\n"
-        for subject, details in tests:
-            # Escape the backticks and backslashes separately
-            escaped_subject = subject.replace('`', '\\`').replace('\\', '\\\\')
-            escaped_details = details.replace('`', '\\`').replace('\\', '\\\\')
-            response += f"`{escaped_subject}: {escaped_details}`\n"
+        response += f"\n\n*📝 Class Tests Tomorrow:*\n"
+        response += "\n".join([f"{subject}: {details}" for subject, details in tests])
     
+    # Log the final response
+    logger.info(f"Response sent to user:\n{response}")
     # Send the reply
-    await update.message.reply_text(response, parse_mode="MarkdownV2")
-
-
-
-
+    await update.message.reply_text(response, parse_mode="Markdown")
 
 
 
