@@ -330,11 +330,6 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     
 # Function to get tomorrow's schedule
-import re
-
-def escape_markdown(text):
-    return re.sub(r'([_*\[\]()~`>#\+\-=|{}.!])', r'\\\1', text)
-
 async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Check if vacation is active
     vacation_active, vacation_message = is_vacation()
@@ -348,8 +343,6 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()
     tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
     tomorrow_date1 = tomorrow_datetime.strftime("%Y-%m-%d")
-
-    logger.info(f"Tomorrow's date for query: {tomorrow_date1}")
 
     # Cleanup old tests
     cleanup_old_tests()
@@ -366,17 +359,18 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Format the response
     if not classes:
-        response = f"❌ *No classes scheduled for tomorrow ({escape_markdown(tomorrow_date)}, {escape_markdown(tomorrow_day_full)})* ❌"
+        response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date}, {tomorrow_day_full})* ❌"
     else:
-        response = f" *Tomorrow's Schedule ({escape_markdown(tomorrow_date)}, {escape_markdown(tomorrow_day_full)}):*\n\n"
+        response = f"*Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
         response += format_schedule(classes)
 
     if tests:
-        response += f"\n\n*📝 Class Tests Tomorrow:*\n"
-        response += "\n".join([f"{escape_markdown(subject)}: {escape_markdown(details)}" for subject, details in tests])
+        response += "\n\n*📝 Class Tests Tomorrow:*\n"
+        response += "\n".join([f"`{subject}: {details}`" for subject, details in tests])
 
-    logger.info(f"Response sent to user:\n{response}")
+    # Send the reply
     await update.message.reply_text(response, parse_mode="MarkdownV2")
+
 
 
 
