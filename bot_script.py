@@ -330,11 +330,16 @@ async def todays_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     
 # Function to get tomorrow's schedule
+import re
+
+def escape_markdown(text):
+    return re.sub(r'([_*\[\]()~`>#\+\-=|{}.!])', r'\\\1', text)
+
 async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Check if vacation is active
     vacation_active, vacation_message = is_vacation()
     if vacation_active:
-        await update.message.reply_text(vacation_message, parse_mode="Markdown")
+        await update.message.reply_text(vacation_message, parse_mode="MarkdownV2")
         return
     
     # Calculate tomorrow's date and day
@@ -353,32 +358,25 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     classes = get_classes_for_day(tomorrow_day_abbr)
 
     # Fetch class tests for tomorrow
-    try:
-        conn = connect_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date1,))
-        tests = cursor.fetchall()
-    except sqlite3.Error as e:
-        logger.error(f"Database error: {e}")
-        await update.message.reply_text("Error fetching class tests. Please try again later.")
-        return
-    finally:
-        conn.close()
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date1,))
+    tests = cursor.fetchall()
+    conn.close()
 
     # Format the response
     if not classes:
-        response = f"❌ *No classes scheduled for tomorrow ({tomorrow_date}, {tomorrow_day_full})* ❌"
+        response = f"❌ *No classes scheduled for tomorrow ({escape_markdown(tomorrow_date)}, {escape_markdown(tomorrow_day_full)})* ❌"
     else:
-        response = f" *Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
+        response = f" *Tomorrow's Schedule ({escape_markdown(tomorrow_date)}, {escape_markdown(tomorrow_day_full)}):*\n\n"
         response += format_schedule(classes)
 
     if tests:
         response += f"\n\n*📝 Class Tests Tomorrow:*\n"
-        response += "\n".join([f"{subject}: {details}" for subject, details in tests])
-    
-    logger.info(f"Response sent to user:\n{response}")
-    await update.message.reply_text(response, parse_mode="Markdown")
+        response += "\n".join([f"{escape_markdown(subject)}: {escape_markdown(details)}" for subject, details in tests])
 
+    logger.info(f"Response sent to user:\n{response}")
+    await update.message.reply_text(response, parse_mode="MarkdownV2")
 
 
 
