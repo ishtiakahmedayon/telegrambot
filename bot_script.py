@@ -339,10 +339,12 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     # Calculate tomorrow's date and day
     tomorrow_datetime = datetime.now(tz) + timedelta(days=1)
-    tomorrow_day_full = tomorrow_datetime.strftime("%A")  # Full name of the day (e.g., "Friday")
-    tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()  # Abbreviated name for fetching data (e.g., "FRI")
+    tomorrow_day_full = tomorrow_datetime.strftime("%A")
+    tomorrow_day_abbr = tomorrow_datetime.strftime("%a").upper()
     tomorrow_date = tomorrow_datetime.strftime("%d-%m-%Y")
     tomorrow_date1 = tomorrow_datetime.strftime("%Y-%m-%d")
+
+    logger.info(f"Tomorrow's date for query: {tomorrow_date1}")
 
     # Cleanup old tests
     cleanup_old_tests()
@@ -351,11 +353,17 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
     classes = get_classes_for_day(tomorrow_day_abbr)
 
     # Fetch class tests for tomorrow
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date1,))
-    tests = cursor.fetchall()
-    conn.close()
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT subject, details FROM ClassTests WHERE test_date = ?", (tomorrow_date1,))
+        tests = cursor.fetchall()
+    except sqlite3.Error as e:
+        logger.error(f"Database error: {e}")
+        await update.message.reply_text("Error fetching class tests. Please try again later.")
+        return
+    finally:
+        conn.close()
 
     # Format the response
     if not classes:
@@ -364,15 +372,13 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
         response = f" *Tomorrow's Schedule ({tomorrow_date}, {tomorrow_day_full}):*\n\n"
         response += format_schedule(classes)
 
-    # Include tests in the response
     if tests:
         response += f"\n\n*📝 Class Tests Tomorrow:*\n"
         response += "\n".join([f"{subject}: {details}" for subject, details in tests])
     
-    # Log the final response
     logger.info(f"Response sent to user:\n{response}")
-    # Send the reply
     await update.message.reply_text(response, parse_mode="Markdown")
+
 
 
 
