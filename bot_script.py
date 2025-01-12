@@ -365,12 +365,16 @@ async def tomorrows_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE)
         response += format_schedule(classes)
 
     # Escape special characters in tests for MarkdownV2
+    # Escape special characters in tests for MarkdownV2
     if tests:
         response += "\n\n*📝 Class Tests Tomorrow:*\n"
-        response += "\n".join([f"`{subject.replace('`', '\\`')}: {details.replace('`', '\\`')}`" for subject, details in tests])
-
+        response += "\n".join(
+            [f"`{subject.replace('`', '\\`')}: {details.replace('`', '\\`')}`".replace('\\', '\\\\') for subject, details in tests]
+        )
+    
     # Send the reply
     await update.message.reply_text(response, parse_mode="MarkdownV2")
+
 
 
 
