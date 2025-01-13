@@ -831,14 +831,20 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Chill bro! No Upcoming Class tests found.")
     else:
         response = "(╯‵□′)╯︵┻━┻  \nUpcoming Class Tests: \n\n"
-        today = datetime.now().date()
+        tz = pytz.timezone("Asia/Dhaka")  # Use GMT+6 time zone
+        today = datetime.now(tz).date()
 
         for test_id, test_date, subject, details in tests:
             test_date_obj = datetime.strptime(test_date, "%Y-%m-%d").date()
             days_remaining = (test_date_obj - today).days
-            response += f"📝 {test_date_obj.strftime('%d-%m-%Y')} | {subject}:\n {details} | ⌛{days_remaining} day(s) remaining\n"
+            day_name = test_date_obj.strftime("%A")  # Get the day name (e.g., "Tuesday")
+            response += (
+                f"📝 {test_date_obj.strftime('%d-%m-%Y')} | {day_name}\n"
+                f"{subject}: {details} | ⌛{days_remaining} days remaining\n"
+            )
         
         await update.message.reply_text(response)
+
 
 
 
