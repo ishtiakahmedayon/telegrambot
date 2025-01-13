@@ -780,11 +780,19 @@ def connect_db():
 def cleanup_old_tests():
     conn = connect_db()
     cursor = conn.cursor()
-
+    
+    # Get today's date in the required format
     today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Delete tests that are before today
     cursor.execute("DELETE FROM ClassTests WHERE test_date < ?", (today,))
+    
+    # Commit the changes
     conn.commit()
     conn.close()
+    
+    print(f"Deleted tests older than {today}")  # Debugging statement
+
 
 # Command to add a class test
 async def add_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
