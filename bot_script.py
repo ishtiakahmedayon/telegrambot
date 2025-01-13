@@ -840,14 +840,10 @@ async def list_tests(update: Update, context: ContextTypes.DEFAULT_TYPE):
             day_name = test_date_obj.strftime("%A")  # Get the day name (e.g., "Tuesday")
             response += (
                 f"📝 {test_date_obj.strftime('%d-%m-%Y')} | {day_name}\n"
-                f"{subject}: {details} | ⌛{days_remaining} days remaining\n"
+                f"{subject}: {details} | ⌛{days_remaining} days remaining\n\n"
             )
         
         await update.message.reply_text(response)
-
-
-
-
 
 
 # Command to delete a test by date
